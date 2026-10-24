@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: supermart-manager
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_PATH
+        value: /var/data/supermart.db
+    # Add a persistent disk mounted at /var/data in the hosting dashboard.
+    # Without a persistent disk, SQLite data may be lost on redeploy/restart.

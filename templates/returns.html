@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Sales & Purchase Returns{% endblock %}
+{% block heading %}Sales & Purchase Returns{% endblock %}
+{% block content %}
+<div class="page-intro"><p class="muted">Record returned goods. Sales returns add items back into stock; purchase returns remove goods from stock. Return values reduce the related outstanding AR/AP balance.</p></div>
+<div class="two-col returns-grid">
+  <section class="panel form-panel"><div class="panel-head"><div><h3>Sales return</h3><p>Goods returned by a customer</p></div></div>
+    <form method="post" action="{{ url_for('sales_return') }}" class="form-grid">
+      <label class="span-two">Original sale item<select name="sale_item_id" required><option value="">Select invoice / product</option>{% for i in sale_items %}{% set remaining = i.quantity - (sale_returned_qty.get(i.id, 0) or 0) %}{% if remaining > 0.0001 %}<option value="{{ i.id }}">{{ i.sale.invoice_no }} · {{ i.product_name }} · sold {{ '%.3f'|format(i.quantity) }} · returnable {{ '%.3f'|format(remaining) }}</option>{% endif %}{% endfor %}</select></label>
+      <label>Return quantity<input name="quantity" type="number" min="0.001" step="0.001" required></label>
+      <label>Return date<input name="return_date" type="date" value="{{ today }}" required></label>
+      <label class="span-two">Reason<input name="reason" placeholder="Damaged, wrong item, customer return"></label>
+      <div class="form-actions"><button class="btn primary" type="submit">Save sales return</button></div>
+    </form>
+  </section>
+  <section class="panel form-panel"><div class="panel-head"><div><h3>Purchase return</h3><p>Goods returned to supplier</p></div></div>
+    <form method="post" action="{{ url_for('purchase_return') }}" class="form-grid">
+      <label class="span-two">Original purchase<select name="purchase_id" required><option value="">Select purchase / supplier</option>{% for p in purchases %}{% set remaining = p.quantity - (purchase_returned_qty.get(p.id, 0) or 0) %}{% if remaining > 0.0001 %}<option value="{{ p.id }}">PUR-{{ p.id }} · {{ p.product.name }} · {{ p.supplier or 'Supplier not specified' }} · returnable {{ '%.3f'|format(remaining) }}</option>{% endif %}{% endfor %}</select></label>
+      <label>Return quantity<input name="quantity" type="number" min="0.001" step="0.001" required></label>
+      <label>Return date<input name="return_date" type="date" value="{{ today }}" required></label>
+      <label class="span-two">Reason<input name="reason" placeholder="Damaged, expired, supplier replacement"></label>
+      <div class="form-actions"><button class="btn primary" type="submit">Save purchase return</button></div>
+    </form>
+  </section>
+</div>
+<section class="panel"><div class="panel-head"><div><h3>Recent sales returns</h3><p>Most recent 100 records</p></div><button class="btn secondary no-print" onclick="window.print()">Print</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Invoice</th><th>Product</th><th>Qty</th><th>Unit price</th><th>Return value</th><th>Reason</th></tr></thead><tbody>{% for r in sales_returns %}<tr><td>{{ r.return_date.strftime('%d %b %Y') }}</td><td>{{ r.sale.invoice_no }}</td><td>{{ r.product.name }}</td><td>{{ '%.3f'|format(r.quantity) }}</td><td>{{ r.unit_price|money }}</td><td class="amount">{{ r.amount|money }}</td><td>{{ r.reason or '—' }}</td></tr>{% else %}<tr><td colspan="7" class="empty">No sales returns recorded yet.</td></tr>{% endfor %}</tbody></table></div></section>
+<section class="panel"><div class="panel-head"><div><h3>Recent purchase returns</h3><p>Most recent 100 records</p></div><button class="btn secondary no-print" onclick="window.print()">Print</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Purchase</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Return value</th><th>Reason</th></tr></thead><tbody>{% for r in purchase_returns %}<tr><td>{{ r.return_date.strftime('%d %b %Y') }}</td><td>PUR-{{ r.purchase_id }}</td><td>{{ r.purchase.supplier or '—' }}</td><td>{{ r.product.name }}</td><td>{{ '%.3f'|format(r.quantity) }}</td><td class="amount">{{ r.amount|money }}</td><td>{{ r.reason or '—' }}</td></tr>{% else %}<tr><td colspan="7" class="empty">No purchase returns recorded yet.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

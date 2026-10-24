@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Customer-wise Total Report{% endblock %}
+{% block heading %}Customer-wise Total Report{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <div><h3>Customer account summary</h3><p>Sales, sales returns, collections and outstanding balances by customer.</p></div>
+    <div class="action-row no-print"><a class="btn secondary" href="{{ url_for('customer_report_export',start=start,end=end) }}">⇩ Export Excel</a><button class="btn primary" onclick="window.print()">▧ Print</button></div>
+  </div>
+  <form method="get" class="filter-bar no-print"><label>From<input type="date" name="start" value="{{ start }}"></label><label>To<input type="date" name="end" value="{{ end }}"></label><button class="btn primary">Apply filter</button></form>
+  <div class="report-period">Period: {{ start }} <span>to</span> {{ end }}</div>
+  <div class="stats-grid report-stats">
+    <div class="stat-card"><div class="stat-top"><span>Sales total</span><span class="stat-icon green">↗</span></div><strong>{{ totals.sales|money }}</strong><small>{{ totals.count }} invoices</small></div>
+    <div class="stat-card"><div class="stat-top"><span>Sales returns</span><span class="stat-icon orange">↩</span></div><strong>{{ totals.returns|money }}</strong><small>Returns against invoices</small></div>
+    <div class="stat-card"><div class="stat-top"><span>Amount received</span><span class="stat-icon blue">₹</span></div><strong>{{ totals.received|money }}</strong><small>Collections recorded</small></div>
+    <div class="stat-card"><div class="stat-top"><span>Outstanding</span><span class="stat-icon purple">◷</span></div><strong>{{ totals.due|money }}</strong><small>Remaining customer balances</small></div>
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Customer</th><th>Sales total</th><th>Sales returns</th><th>Received</th><th>Outstanding</th><th>Invoices</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td><b>{{ r.name }}</b></td><td>{{ r.sales|money }}</td><td>{{ r.returns|money }}</td><td>{{ r.received|money }}</td><td class="amount">{{ r.due|money }}</td><td>{{ r.count }}</td></tr>{% else %}<tr><td colspan="6" class="empty">No customer sales in this period.</td></tr>{% endfor %}
+  </tbody><tfoot><tr><th>GRAND TOTAL</th><th>{{ totals.sales|money }}</th><th>{{ totals.returns|money }}</th><th>{{ totals.received|money }}</th><th>{{ totals.due|money }}</th><th>{{ totals.count }}</th></tr></tfoot></table></div>
+  <p class="footnote">Outstanding = invoice total less sales returns and recorded receipts. The report uses the selected sale-date period; payments made against those invoices are reflected in the current balances.</p>
+</div>
+{% endblock %}

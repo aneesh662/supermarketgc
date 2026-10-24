@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Payment Receipt{% endblock %}
+{% block heading %}Payment Receipt{% endblock %}
+{% block content %}
+<div class="panel receipt-paper">
+  <div class="panel-head"><div><h2>{{ store_name }}</h2><p>{{ 'Customer collection receipt' if payment.direction == 'receipt' else 'Supplier payment voucher' }}</p></div><div class="no-print"><button class="btn primary" onclick="window.print()">Print receipt</button> <a class="btn secondary" href="{{ url_for('receivables_payables') }}">Back to AR / AP</a></div></div>
+  <hr>
+  <div class="receipt-meta"><p><strong>Receipt / Voucher No:</strong> PAY-{{ '%06d'|format(payment.id) }}</p><p><strong>Date:</strong> {{ payment.payment_date.strftime('%d %b %Y') }}</p><p><strong>{{ 'Received from' if payment.direction == 'receipt' else 'Paid to' }}:</strong> {{ payment.party_name or '—' }}</p><p><strong>Payment method:</strong> {{ payment.payment_method }}</p><p><strong>Reference:</strong> {{ payment.reference or '—' }}</p><p><strong>Invoice:</strong> {% if payment.sale %}{{ payment.sale.invoice_no }}{% elif payment.purchase %}Purchase #{{ payment.purchase.id }}{% else %}—{% endif %}</p></div>
+  <div class="receipt-total"><span>Amount {{ 'received' if payment.direction == 'receipt' else 'paid' }}</span><strong>{{ payment.amount|money }}</strong></div>
+  {% if payment.note %}<p><strong>Note:</strong> {{ payment.note }}</p>{% endif %}
+  <p class="muted">This is a system-generated payment record.</p>
+</div>
+{% endblock %}

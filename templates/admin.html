@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Global Admin{% endblock %}
+{% block heading %}Global Admin Console{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="panel-head"><div><h3>All supermarkets</h3><p>Manage every store, check outstanding balances, and open a store workspace. Store records remain separated.</p></div><button class="btn primary no-print" onclick="window.print()">Print overview</button></div>
+  <div class="table-wrap"><table><thead><tr><th>Supermarket / rename</th><th>Users</th><th>Products</th><th>Total sales</th><th>Customer due (AR)</th><th>Supplier due (AP)</th><th class="no-print">Actions</th></tr></thead><tbody>
+  {% for row in summaries %}<tr><td><strong>{{ row.store.name }}</strong><br><small>Store ID: {{ row.store.id }}</small><form method="post" action="{{ url_for('admin_rename_store', sid=row.store.id) }}" class="inline-form no-print"><input name="store_name" value="{{ row.store.name }}" aria-label="Store name" required><button class="btn secondary" type="submit">Rename</button></form></td><td>{{ row.users }}</td><td>{{ row.products }}</td><td>{{ row.sales|money }}</td><td class="amount">{{ row.receivable|money }}</td><td class="amount">{{ row.payable|money }}</td><td class="no-print"><form method="post" action="{{ url_for('admin_open_store', sid=row.store.id) }}"><button class="btn primary" type="submit">Manage store</button></form></td></tr>{% else %}<tr><td colspan="7" class="empty">No stores found.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+<div class="panel no-print">
+  <div class="panel-head"><div><h3>Create a supermarket</h3><p>Create the store and its first owner login. Each store gets separate products, sales, purchases, expenses and balances.</p></div></div>
+  <form method="post" action="{{ url_for('admin_create_store') }}" class="form-grid">
+    <label>Supermarket name *<input name="store_name" required placeholder="e.g. Green Mart, Kunnamkulam"></label>
+    <label>Owner / admin name *<input name="owner_name" required placeholder="Store owner name"></label>
+    <label>Owner login email *<input type="email" name="owner_email" required placeholder="owner@example.com"></label>
+    <label>Temporary password *<input type="password" name="owner_password" minlength="8" required placeholder="At least 8 characters"></label>
+    <div class="form-actions"><button class="btn primary" type="submit">Create supermarket</button></div>
+  </form>
+</div>
+<div class="panel no-print">
+  <div class="panel-head"><div><h3>Store user permissions</h3><p>Tick only the modules each user should access. Store users cannot access other supermarkets.</p></div></div>
+  {% for u in users %}<div class="permission-card"><div><strong>{{ u.name }}</strong><p class="muted">{{ u.email }} · {{ store_names.get(u.supermarket_id, 'Store') }} (ID {{ u.supermarket_id }})</p></div>
+    <form method="post" action="{{ url_for('admin_permissions', user_id=u.id) }}" class="permission-form">
+      {% set perms = (u.permissions or '').split(',') %}
+      {% for key,label in [('sales','Sales'),('purchases','Purchases'),('products','Stock / Products'),('expenses','Expenses'),('reports','Reports'),('accounting','Accounting'),('receivables_payables','AR / AP and payments')] %}<label class="permission-option"><input type="checkbox" name="permissions" value="{{ key }}" {% if key in perms %}checked{% endif %}> {{ label }}</label>{% endfor %}
+      <button class="btn primary" type="submit">Save permissions</button>
+    </form>
+  </div>{% else %}<p class="empty">No store users registered yet.</p>{% endfor %}
+</div>
+<div class="flash info">Security: change the default global admin password before using real business data. Set SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD before the first launch. The global administrator can open each store and return here using “All Stores”.</div>
+{% endblock %}
